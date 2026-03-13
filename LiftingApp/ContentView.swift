@@ -13,6 +13,11 @@ struct ContentView: View {
                     Label("履歴", systemImage: "clock")
                 }
 
+            VideoAnalysisView()
+                .tabItem {
+                    Label("動画分析", systemImage: "film")
+                }
+
             StatsView()
                 .tabItem {
                     Label("統計", systemImage: "chart.bar")
