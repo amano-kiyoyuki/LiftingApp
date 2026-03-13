@@ -1,0 +1,27 @@
+# Xcode
+build/
+DerivedData/
+*.xcuserdata
+*.xcworkspace
+!*.xcworkspace/contents.xcworkspacedata
+xcuserdata/
+
+# Swift Package Manager
+.build/
+Packages/
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# OS
+.DS_Store
+*.swp
+*~
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
