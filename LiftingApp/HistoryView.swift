@@ -1,10 +1,12 @@
 import SwiftUI
 import SwiftData
+import Photos
 
 struct HistoryView: View {
     @Query(sort: \PracticeRecord.date, order: .reverse) private var records: [PracticeRecord]
     @Environment(\.modelContext) private var modelContext
     @State private var playingVideoURL: URL?
+    @State private var saveMessage: String?
 
     var body: some View {
         NavigationStack {
@@ -23,6 +25,14 @@ struct HistoryView: View {
             .navigationTitle("練習履歴")
             .sheet(item: $playingVideoURL) { url in
                 VideoPlayerView(url: url)
+            }
+            .alert("動画保存", isPresented: Binding(
+                get: { saveMessage != nil },
+                set: { if !$0 { saveMessage = nil } }
+            )) {
+                Button("OK") { saveMessage = nil }
+            } message: {
+                Text(saveMessage ?? "")
             }
         }
     }
@@ -54,16 +64,47 @@ struct HistoryView: View {
             }
 
             if let videoURL = record.videoURL {
-                Button {
-                    playingVideoURL = videoURL
-                } label: {
-                    Label("録画を再生", systemImage: "play.circle.fill")
-                        .font(.subheadline)
+                HStack(spacing: 16) {
+                    Button {
+                        playingVideoURL = videoURL
+                    } label: {
+                        Label("録画を再生", systemImage: "play.circle.fill")
+                            .font(.subheadline)
+                    }
+
+                    Button {
+                        saveVideoToCameraRoll(url: videoURL)
+                    } label: {
+                        Label("カメラロールに保存", systemImage: "square.and.arrow.down")
+                            .font(.subheadline)
+                    }
                 }
                 .padding(.top, 2)
             }
         }
         .padding(.vertical, 4)
+    }
+
+    private func saveVideoToCameraRoll(url: URL) {
+        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
+            guard status == .authorized else {
+                DispatchQueue.main.async {
+                    saveMessage = "フォトライブラリへのアクセスが許可されていません"
+                }
+                return
+            }
+            PHPhotoLibrary.shared().performChanges {
+                PHAssetChangeRequest.creationRequestForAssetFromVideo(atFileURL: url)
+            } completionHandler: { success, error in
+                DispatchQueue.main.async {
+                    if success {
+                        saveMessage = "カメラロールに保存しました"
+                    } else {
+                        saveMessage = "保存に失敗しました"
+                    }
+                }
+            }
+        }
     }
 
     private func deleteRecords(at offsets: IndexSet) {
